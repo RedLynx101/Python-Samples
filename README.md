@@ -1,4 +1,4 @@
-# NoahHicks
+# Python Samples - Portfolio Collection
 A repository for some of the projects I have worked on recently. This is linked to my website: NoahHicks.com
 
 ## Contents
