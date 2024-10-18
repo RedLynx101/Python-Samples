@@ -7,5 +7,5 @@ A repository for some of the projects I have worked on recently. This is linked 
 2. CSV-ME (AI-Assisted Data Analysis)
 
 2024/
-1. pdf_combiner (Gui assisted PDF Combiner)
+1. PDF Combiner (Gui-assisted PDF Combiner)
 More to be added soon.
