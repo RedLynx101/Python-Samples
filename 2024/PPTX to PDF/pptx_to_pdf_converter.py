@@ -41,8 +41,8 @@ class PPTXtoPDFConverter:
 
     def add_files(self):
         files = filedialog.askopenfilenames(
-            title="Select PPTX files",
-            filetypes=[("PowerPoint files", "*.pptx")]
+            title="Select PowerPoint files",
+            filetypes=[("PowerPoint files", "*.pptx *.ppt")]
         )
         for file in files:
             if file not in self.selected_files:
@@ -51,7 +51,7 @@ class PPTXtoPDFConverter:
         
     def convert_files(self):
         if not self.selected_files:
-            self.status_label.config(text="Please select at least one PPTX file")
+            self.status_label.config(text="Please select at least one PowerPoint file")
             return
             
         output_path = filedialog.asksaveasfilename(
