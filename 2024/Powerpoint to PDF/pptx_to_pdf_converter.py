@@ -7,7 +7,7 @@ import os
 class PPTXtoPDFConverter:
     def __init__(self, root):
         self.root = root
-        self.root.title("PPTX to PDF Converter")
+        self.root.title("Powerpoint to PDF Converter")
         self.root.geometry("600x400")
         
         self.selected_files = []
@@ -29,7 +29,7 @@ class PPTXtoPDFConverter:
         self.listbox.configure(yscrollcommand=self.scrollbar.set)
         
         # Buttons
-        self.add_button = ttk.Button(self.main_frame, text="Add PPTX Files", command=self.add_files)
+        self.add_button = ttk.Button(self.main_frame, text="Add Powerpoint Files", command=self.add_files)
         self.add_button.grid(row=1, column=0, pady=10, padx=5)
         
         self.convert_button = ttk.Button(self.main_frame, text="Convert to PDF", command=self.convert_files)
