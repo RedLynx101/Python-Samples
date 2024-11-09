@@ -1,83 +1,92 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from pptx import Presentation
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from PIL import Image
-import io
+from tkinter import filedialog, ttk
+from pathlib import Path
+import comtypes.client
 import os
-from reportlab.lib.utils import ImageReader
-from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 class PPTXtoPDFConverter:
-    def __init__(self, master):
-        self.master = master
-        master.title("PPTX to PDF Converter")
-        master.geometry("400x200")
+    def __init__(self, root):
+        self.root = root
+        self.root.title("PPTX to PDF Converter")
+        self.root.geometry("600x400")
+        
+        self.selected_files = []
+        
+        # Create main frame
+        self.main_frame = ttk.Frame(root, padding="10")
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Create and configure listbox to show selected files
+        self.listbox_frame = ttk.Frame(self.main_frame)
+        self.listbox_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        self.listbox = tk.Listbox(self.listbox_frame, width=70, height=15)
+        self.listbox.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Add scrollbar to listbox
+        self.scrollbar = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL, command=self.listbox.yview)
+        self.scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.listbox.configure(yscrollcommand=self.scrollbar.set)
+        
+        # Buttons
+        self.add_button = ttk.Button(self.main_frame, text="Add PPTX Files", command=self.add_files)
+        self.add_button.grid(row=1, column=0, pady=10, padx=5)
+        
+        self.convert_button = ttk.Button(self.main_frame, text="Convert to PDF", command=self.convert_files)
+        self.convert_button.grid(row=1, column=1, pady=10, padx=5)
+        
+        # Status label
+        self.status_label = ttk.Label(self.main_frame, text="")
+        self.status_label.grid(row=2, column=0, columnspan=2, pady=5)
 
-        self.label = tk.Label(master, text="Select PPTX files to convert:")
-        self.label.pack(pady=10)
-
-        self.select_button = tk.Button(master, text="Select Files", command=self.select_files)
-        self.select_button.pack(pady=10)
-
-        self.convert_button = tk.Button(master, text="Convert to PDF", command=self.convert_to_pdf)
-        self.convert_button.pack(pady=10)
-
-        self.files = []
-
-    def select_files(self):
-        self.files = filedialog.askopenfilenames(filetypes=[("PowerPoint files", "*.pptx")])
-        if self.files:
-            self.label.config(text=f"{len(self.files)} file(s) selected")
-        else:
-            self.label.config(text="No files selected")
-
-    def convert_to_pdf(self):
-        if not self.files:
-            messagebox.showerror("Error", "No files selected")
+    def add_files(self):
+        files = filedialog.askopenfilenames(
+            title="Select PPTX files",
+            filetypes=[("PowerPoint files", "*.pptx")]
+        )
+        for file in files:
+            if file not in self.selected_files:
+                self.selected_files.append(file)
+                self.listbox.insert(tk.END, Path(file).name)
+        
+    def convert_files(self):
+        if not self.selected_files:
+            self.status_label.config(text="Please select at least one PPTX file")
             return
-
-        output_file = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
-        if not output_file:
-            return
-
-        c = canvas.Canvas(output_file, pagesize=letter)
-
-        for pptx_file in self.files:
-            prs = Presentation(pptx_file)
-            for slide in prs.slides:
-                # Start a new page for each slide
-                c.showPage()
+            
+        output_path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            title="Save PDF as"
+        )
+        
+        if output_path:
+            try:
+                powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
                 
-                # Set initial text position
-                text_y_position = 750  # Starting Y position for text
-
-                for shape in slide.shapes:
-                    if shape.has_text_frame:
-                        for paragraph in shape.text_frame.paragraphs:
-                            for run in paragraph.runs:
-                                text = run.text
-                                c.drawString(50, text_y_position, text)
-                                text_y_position -= 15  # Move down for the next line of text
-
-                    if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-                        img_stream = io.BytesIO(shape.image.blob)
-                        img = Image.open(img_stream)
-                        img_width, img_height = img.size
-                        pdf_width, pdf_height = letter
-
-                        scale = min(pdf_width / img_width, pdf_height / img_height)
-                        new_width = img_width * scale
-                        new_height = img_height * scale
-
-                        x = (pdf_width - new_width) / 2
-                        y = (pdf_height - new_height) / 2
-
-                        c.drawImage(ImageReader(img), x, y, width=new_width, height=new_height)
-
-        c.save()
-        messagebox.showinfo("Success", f"PDF saved as {output_file}")
+                # Convert paths to absolute Windows paths
+                first_file = str(Path(self.selected_files[0]).resolve())
+                output_path = str(Path(output_path).resolve())
+                
+                pres = powerpoint.Presentations.Open(first_file)
+                
+                for pptx_path in self.selected_files[1:]:
+                    abs_path = str(Path(pptx_path).resolve())
+                    additional_pres = powerpoint.Presentations.Open(abs_path)
+                    num_slides = additional_pres.Slides.Count
+                    for i in range(1, num_slides + 1):
+                        additional_pres.Slides(i).Copy()
+                        pres.Slides.Paste()
+                    additional_pres.Close()
+                
+                pres.SaveAs(output_path, 32)
+                pres.Close()
+                powerpoint.Quit()
+                
+                self.status_label.config(text="Conversion completed successfully!")
+                
+            except Exception as e:
+                self.status_label.config(text=f"Error: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
