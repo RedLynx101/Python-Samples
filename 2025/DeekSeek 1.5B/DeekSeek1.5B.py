@@ -2,7 +2,7 @@ import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-# print(torch.cuda.is_available())  # Should return True
+# print(torch.cuda.is_available())  # Should return True for GPU
 # print(torch.__version__)  # Needs to be 2.0+
 
 # Add these to generation config
@@ -37,7 +37,7 @@ def generate_response(prompt):
         # Generation parameters
         outputs = model.generate(
             **inputs,
-            max_new_tokens=2048,  # Reduce from 3000 (official benchmark uses 32k max)
+            max_new_tokens=2048,  # Official benchmark uses 32k max
             temperature=0.6,       # Strictly recommended range: 0.5-0.7
             top_p=0.95,
             do_sample=True,
