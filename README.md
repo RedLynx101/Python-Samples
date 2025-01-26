@@ -12,5 +12,5 @@ A repository for some of the projects I have worked on recently. This is linked 
 
 
 2025/
-1. DeekSeek1.5B (Local install and running of the new DeekSeek R1 [Reasoning] 1.5B parameter model with a simple GUI)
+1. DeekSeek1.5B (Local install [<4GB] and running of the new DeekSeek R1 [Reasoning] 1.5B parameter model with a simple GUI)
 More to be added.
