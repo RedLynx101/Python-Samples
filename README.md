@@ -9,4 +9,8 @@ A repository for some of the projects I have worked on recently. This is linked 
 2024/
 1. PDF Combiner (GUI-assisted PDF Combiner)
 2. PPTX to PDF Converter (GUI-assisted PowerPoint to PDF Converter)
-More to be added soon.
+
+
+2025/
+1. DeekSeek1.5B (Local install and running of the new DeekSeek R1 [Reasoning] 1.5B parameter model with a simple GUI)
+More to be added.

@@ -1,76 +1,103 @@
 import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+import warnings
 
 # print(torch.cuda.is_available())  # Should return True for GPU
 # print(torch.__version__)  # Needs to be 2.0+
 
-# Add these to generation config
-torch.backends.cuda.enable_flash_sdp(True)
-torch.backends.cuda.enable_mem_efficient_sdp(True)
+# Suppress warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 
-# Configuration
+# Configure flash attention if available
+if torch.cuda.is_available():
+    torch.backends.cuda.enable_flash_sdp(True)
+    torch.backends.cuda.enable_mem_efficient_sdp(True)
+
+# Model configuration
 MODEL_NAME = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if DEVICE == "cuda" else torch.float32
 
-# Remove flash_attention_2 from model loading
+# Load model with conversation capabilities
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    trust_remote_code=True,  # Required for DeepSeek models
+    trust_remote_code=True,
     device_map="auto",
     torch_dtype=TORCH_DTYPE
-)
+).eval()
 
-# Set padding token properly
+# Initialize tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
     MODEL_NAME,
-    trust_remote_code=True,  # Required
-    use_fast=False  # Essential for compatibility
+    trust_remote_code=True,
+    use_fast=False
 )
 tokenizer.pad_token = tokenizer.eos_token
 
-def generate_response(prompt):
+def format_conversation(history):
+    """Convert Gradio history to DeepSeek's format"""
+    return "\n".join([f"User: {entry[0]}\nAssistant: {entry[1]}" for entry in history])
+
+def generate_response(message, history):
     try:
-        inputs = tokenizer(prompt, return_tensors="pt").to(DEVICE)
+        conv_history = format_conversation(history)
+        full_prompt = f"{conv_history}\nUser: {message}\nAssistant:" if history else f"User: {message}\nAssistant:"
         
-        # Generation parameters
+        inputs = tokenizer(
+            full_prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=40000 # Limit to ~40k tokens
+        ).to(DEVICE)
+        
         outputs = model.generate(
             **inputs,
-            max_new_tokens=2048,  # Official benchmark uses 32k max
-            temperature=0.6,       # Strictly recommended range: 0.5-0.7
-            top_p=0.95,
+            max_new_tokens=4096,  # Official benchmark uses 32k max
+            temperature=0.7,
+            top_p=0.9,
+            repetition_penalty=1.1,
             do_sample=True,
             eos_token_id=tokenizer.eos_token_id,
-            pad_token_id=tokenizer.eos_token_id,
-            repetition_penalty=1.1  # Add to prevent looping
+            pad_token_id=tokenizer.eos_token_id
         )
         
-        # Clean decoding
         response = tokenizer.decode(
-            outputs[0][inputs.input_ids.shape[1]:], 
+            outputs[0][inputs.input_ids.shape[1]:],
             skip_special_tokens=True
-        )
-        return response.strip()
+        ).strip()
+        
+        return response
     
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Create interface
-iface = gr.Interface(
+# Create chat interface
+chat_interface = gr.ChatInterface(
     fn=generate_response,
-    inputs=gr.Textbox(label="Input Prompt", lines=3),
-    outputs=gr.Textbox(label="Model Response", lines=5),
     title="DeepSeek-1.5B Chat",
-    allow_flagging="never"
+    description="Conversational AI with DeepSeek-R1-Distill-Qwen-1.5B",
+    examples=[
+        ["Explain quantum computing in simple terms"],
+        ["Write a Python function to reverse a string"],
+        ["How does photosynthesis work?"]
+    ]
 )
 
 if __name__ == "__main__":
-    iface.launch(
-        server_name="localhost",
-        server_port=7860,
-        share=False
-    )
+    try:
+        chat_interface.launch(
+            server_name="localhost",
+            server_port=7860,
+            share=False
+        )
+    except KeyboardInterrupt:
+        print("\nServer closed gracefully")
+    finally:
+        # Cleanup resources
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 
 # Example Prompt:
