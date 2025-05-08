@@ -70,35 +70,79 @@ def settings_menu():
         print(LINE)
         print(f'1. Click Type: {settings["click_type"]}')
         print(f'2. Interval: {settings["interval"]} seconds')
-        print(f'3. Mouse Button: {settings["mouse_button"]}')
-        print(f'4. Keyboard Key: {settings["keyboard_key"]}')
-        print(f'5. Sequence: {sequence_str()}')
-        print(f'6. Hotkey Start: {settings["hotkey_start"]}')
-        print(f'7. Hotkey Stop: {settings["hotkey_stop"]}')
-        print('8. Back to Main Menu')
-        print(LINE)
-        choice = input('Select a setting to change: ')
-        if choice == '1':
-            click_type_menu()
-        elif choice == '2':
-            try:
-                settings['interval'] = float(input('Enter interval in seconds (e.g., 0.1): '))
-            except ValueError:
-                input('Invalid number. Press Enter to continue...')
-        elif choice == '3':
-            settings['mouse_button'] = input('Enter mouse button (left/right/middle): ').lower()
-        elif choice == '4':
-            settings['keyboard_key'] = input('Enter key to press (e.g., a, space): ')
-        elif choice == '5':
-            sequence_menu()
-        elif choice == '6':
-            settings['hotkey_start'] = input('Enter hotkey to start (e.g., f6): ').lower()
-        elif choice == '7':
-            settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
-        elif choice == '8':
-            break
-        else:
-            input('Invalid choice. Press Enter to continue...')
+        # Show only relevant settings for the selected click type
+        if settings['click_type'] == 'mouse':
+            print(f'3. Mouse Button: {settings["mouse_button"]}')
+            print(f'4. Hotkey Start: {settings["hotkey_start"]}')
+            print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
+            print('6. Back to Main Menu')
+            print(LINE)
+            choice = input('Select a setting to change: ')
+            if choice == '1':
+                click_type_menu()
+            elif choice == '2':
+                try:
+                    settings['interval'] = float(input('Enter interval in seconds (e.g., 0.1): '))
+                except ValueError:
+                    input('Invalid number. Press Enter to continue...')
+            elif choice == '3':
+                settings['mouse_button'] = input('Enter mouse button (left/right/middle): ').lower()
+            elif choice == '4':
+                settings['hotkey_start'] = input('Enter hotkey to start (e.g., f6): ').lower()
+            elif choice == '5':
+                settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
+            elif choice == '6':
+                break
+            else:
+                input('Invalid choice. Press Enter to continue...')
+        elif settings['click_type'] == 'keyboard':
+            print(f'3. Keyboard Key: {display_key(settings["keyboard_key"])}')
+            print(f'4. Hotkey Start: {settings["hotkey_start"]}')
+            print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
+            print('6. Back to Main Menu')
+            print(LINE)
+            choice = input('Select a setting to change: ')
+            if choice == '1':
+                click_type_menu()
+            elif choice == '2':
+                try:
+                    settings['interval'] = float(input('Enter interval in seconds (e.g., 0.1): '))
+                except ValueError:
+                    input('Invalid number. Press Enter to continue...')
+            elif choice == '3':
+                settings['keyboard_key'] = input('Enter key to press (e.g., a, space): ')
+            elif choice == '4':
+                settings['hotkey_start'] = input('Enter hotkey to start (e.g., f6): ').lower()
+            elif choice == '5':
+                settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
+            elif choice == '6':
+                break
+            else:
+                input('Invalid choice. Press Enter to continue...')
+        elif settings['click_type'] == 'sequence':
+            print(f'3. Sequence: {sequence_str()}')
+            print(f'4. Hotkey Start: {settings["hotkey_start"]}')
+            print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
+            print('6. Back to Main Menu')
+            print(LINE)
+            choice = input('Select a setting to change: ')
+            if choice == '1':
+                click_type_menu()
+            elif choice == '2':
+                try:
+                    settings['interval'] = float(input('Enter interval in seconds (e.g., 0.1): '))
+                except ValueError:
+                    input('Invalid number. Press Enter to continue...')
+            elif choice == '3':
+                sequence_menu()
+            elif choice == '4':
+                settings['hotkey_start'] = input('Enter hotkey to start (e.g., f6): ').lower()
+            elif choice == '5':
+                settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
+            elif choice == '6':
+                break
+            else:
+                input('Invalid choice. Press Enter to continue...')
 
 def click_type_menu():
     clear()
@@ -119,11 +163,19 @@ def click_type_menu():
     else:
         input('Invalid choice. Press Enter to continue...')
 
+def display_key(key):
+    if key == ' ' or key.lower() == 'space':
+        return 'space'
+    elif key == '':
+        return '[blank]'
+    else:
+        return key
+
 def sequence_str():
     if not settings['sequence']:
         return '[empty]'
     return ', '.join([
-        f"{step['type']}({step['value']})" for step in settings['sequence']
+        f"{step['type']}({display_key(step['value']) if step['type']=='keyboard' else step['value']})" for step in settings['sequence']
     ])
 
 def sequence_menu():
@@ -176,7 +228,7 @@ def start_clicker_menu():
     if settings['click_type'] == 'mouse':
         print(f"Mouse Button: {settings['mouse_button']}")
     elif settings['click_type'] == 'keyboard':
-        print(f"Keyboard Key: {settings['keyboard_key']}")
+        print(f"Keyboard Key: {display_key(settings['keyboard_key'])}")
     elif settings['click_type'] == 'sequence':
         print(f"Sequence: {sequence_str()}")
     print(f"Start Hotkey: {settings['hotkey_start'].upper()}")
