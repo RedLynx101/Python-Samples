@@ -13,6 +13,7 @@ settings = {
     'sequence': [],  # Each step: {'type': 'mouse'/'keyboard', 'value': ...}
     'hotkey_start': 'f6',
     'hotkey_stop': 'f7',
+    'hotkey_escape': 'f8',  # User-configurable escape key
     'running': False
 }
 
@@ -75,7 +76,8 @@ def settings_menu():
             print(f'3. Mouse Button: {settings["mouse_button"]}')
             print(f'4. Hotkey Start: {settings["hotkey_start"]}')
             print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
-            print('6. Back to Main Menu')
+            print(f'6. Hotkey Escape: {settings["hotkey_escape"]}')
+            print('7. Back to Main Menu')
             print(LINE)
             choice = input('Select a setting to change: ')
             if choice == '1':
@@ -92,6 +94,8 @@ def settings_menu():
             elif choice == '5':
                 settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
             elif choice == '6':
+                settings['hotkey_escape'] = input('Enter hotkey to escape (e.g., f8): ').lower()
+            elif choice == '7':
                 break
             else:
                 input('Invalid choice. Press Enter to continue...')
@@ -99,7 +103,8 @@ def settings_menu():
             print(f'3. Keyboard Key: {display_key(settings["keyboard_key"])}')
             print(f'4. Hotkey Start: {settings["hotkey_start"]}')
             print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
-            print('6. Back to Main Menu')
+            print(f'6. Hotkey Escape: {settings["hotkey_escape"]}')
+            print('7. Back to Main Menu')
             print(LINE)
             choice = input('Select a setting to change: ')
             if choice == '1':
@@ -116,6 +121,8 @@ def settings_menu():
             elif choice == '5':
                 settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
             elif choice == '6':
+                settings['hotkey_escape'] = input('Enter hotkey to escape (e.g., f8): ').lower()
+            elif choice == '7':
                 break
             else:
                 input('Invalid choice. Press Enter to continue...')
@@ -123,7 +130,8 @@ def settings_menu():
             print(f'3. Sequence: {sequence_str()}')
             print(f'4. Hotkey Start: {settings["hotkey_start"]}')
             print(f'5. Hotkey Stop: {settings["hotkey_stop"]}')
-            print('6. Back to Main Menu')
+            print(f'6. Hotkey Escape: {settings["hotkey_escape"]}')
+            print('7. Back to Main Menu')
             print(LINE)
             choice = input('Select a setting to change: ')
             if choice == '1':
@@ -140,6 +148,8 @@ def settings_menu():
             elif choice == '5':
                 settings['hotkey_stop'] = input('Enter hotkey to stop (e.g., f7): ').lower()
             elif choice == '6':
+                settings['hotkey_escape'] = input('Enter hotkey to escape (e.g., f8): ').lower()
+            elif choice == '7':
                 break
             else:
                 input('Invalid choice. Press Enter to continue...')
@@ -233,6 +243,7 @@ def start_clicker_menu():
         print(f"Sequence: {sequence_str()}")
     print(f"Start Hotkey: {settings['hotkey_start'].upper()}")
     print(f"Stop Hotkey: {settings['hotkey_stop'].upper()}")
+    print(f"Escape Hotkey: {settings['hotkey_escape'].upper()}")
     print(LINE)
     input('Press Enter and use the hotkey to start...')
     run_clicker_with_hotkeys()
@@ -247,14 +258,14 @@ def run_clicker_with_hotkeys():
             k = str(key).replace('Key.', '').lower()
         if k == settings['hotkey_start']:
             if not settings['running']:
-                print('Clicker started! (Press stop hotkey to end, or ESC to exit to menu)')
+                print('Clicker started! (Press stop or escape hotkey to end)')
                 settings['running'] = True
                 threading.Thread(target=clicker_thread, args=(stop_listener,), daemon=True).start()
         elif k == settings['hotkey_stop']:
             if settings['running']:
                 print('Clicker stopped!')
                 settings['running'] = False
-        elif k == 'esc':
+        elif k == settings['hotkey_escape']:
             print('Exiting clicker loop...')
             settings['running'] = False
             stop_listener.set()
